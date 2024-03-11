@@ -1,7 +1,6 @@
 from string import punctuation
 from time import sleep
 import random
-import string
 
 def registreerimine(kasutajad: list, paroolid: list) -> tuple:
     """Tagastab kasutajad ja paroolid:
@@ -121,9 +120,18 @@ def generate_password():
     """Funktsioon genereerib juhusliku tugeva parooli
     :rtype: str
     """
-
-def generate_password():
     password = ''
     for _ in range(12):
         password += str(random.randint(0, 9))
     return password
+
+def loe_failist(fail: str) -> list:
+    järjend = []
+
+    with open(fail, 'r', encoding="utf-8") as f:
+
+
+        for rida in f:
+            järjend.append(rida.strip())
+
+    return järjend
