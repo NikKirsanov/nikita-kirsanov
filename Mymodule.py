@@ -1,137 +1,148 @@
-from string import punctuation
+from string import punctuation, ascii_lowercase, ascii_uppercase, digits
 from time import sleep
-import random
+from os import path, remove
 
-def registreerimine(kasutajad: list, paroolid: list) -> tuple:
-    """Tagastab kasutajad ja paroolid:
-    :param list kasutajad: kasutaja järjendid
-    :param list paroolid: parooli järjendid
+def registreerimine(kasutajad:list, paroolid:list) -> tuple:
+    """
+    Registreerib uue kasutaja.
+    :param list kasutajad: Olemasolevate kasutajate nimekiri.
+    :param list paroolid: Olemasolevate paroolide nimekiri.
     :rtype: tuple
     """
     while True:
         nimi = input("Mis on sinu nimi? ")
         if nimi not in kasutajad:
             while True:
-                valik = input("Kas soovid luua parooli ise (sisesta 'ise') või lasta seda genereerida (sisesta 'genereeri')? ")
-                if valik.lower() == "ise":
-                    parool = input("Mis on sinu parool? ")
-                    flag_p = False
-                    flag_l = False
-                    flag_u = False
-                    flag_d = False
-                    
-                    if len(parool) >= 8:
-                        parool_list = list(parool)
-                        for p in parool_list:
-                            if p in punctuation:
-                                flag_p = True
-                            elif p.islower():
-                                flag_l = True
-                            elif p.isupper():
-                                flag_u = True
-                            elif p.isdigit():
-                                flag_d = True
-                                
-                        if flag_p and flag_l and flag_u and flag_d:
-                            kasutajad.append(nimi)
-                            paroolid.append(parool)
-                            print("Kasutaja edukalt registreeritud!")
-                            break
-                        else:
-                            print("Nõrk salasõna")
-                    else:
-                        print("Parool peab olema vähemalt 8 tähemärki pikk")
-                elif valik.lower() == "genereeri":
-                    parool = generate_password()
+                parool = input("Mis on sinu parool? ")
+                if len(parool) >= 8 and any(c in punctuation for c in parool) \
+                    and any(c in ascii_lowercase for c in parool) \
+                    and any(c in ascii_uppercase for c in parool) \
+                    and any(c in digits for c in parool):
                     kasutajad.append(nimi)
                     paroolid.append(parool)
-                    print("Kasutaja edukalt registreeritud! Genereeritud parool:", parool)
                     break
                 else:
-                    print("Vale valik, proovi uuesti!")
+                    print("Nõrk salasõna!")
             break
         else:
             print("Selline kasutaja on juba olemas!")
-
     return kasutajad, paroolid
 
-def autoriseerimine(kasutajad:list,paroolid:list):
-    """Funktsioon kuvab ekraanile "Tere tulemas!" kui kasutaja on olemas nimekirjas
-        Nimi on järjendis kasutajad
-        Salasõna on paroolide järjendis
-        Nimi ja salasõna indeksid on võrdsed
-    param list kasutajad:...
-    param list paroolid:...
+def autoriseerimine(kasutajad:list, paroolid:list):
     """
-    p=0
-    while True:
-        nimi = input("Sisesta kasutajanimi: ")
-        
-        if nimi in kasutajad:
-            parool = input("Sisesta salasõna: ")
-            p += 1
-            try:
-                if kasutajad.index(nimi) == paroolid.index(parool):
-                    print(f"Tere tulemast! {nimi}")
-                    break
-            except:
-                print("Vale nimi või salasõna!")
-                if p == 5:
-                    print("Proovi uuesti 10 sek pärast")
-                    for i in range(10):
-                        sleep(1)
-                        print(f"On jäänud {10-i-1} sek")
-                else:
-                    print("Kasutajat pole")
-
-def nimi_või_parooli_muutmine(kasutajad: list) -> list:
-    """Funktsioon võimaldab kasutajal muuta oma kasutajanime või parooli
-    :param list kasutajad: kasutaja järjendid
-    :rtype: list
+    Autoriseerib kasutaja.
     """
+    p = 0
     while True:
-        nimi = input("Mis on sinu kasutajanimi? ")
-        if nimi in kasutajad:
-            uus_nimi = input("Sisesta uus kasutajanimi: ")
-            if uus_nimi not in kasutajad:
-                kasutajad[kasutajad.index(nimi)] = uus_nimi
-                print("Kasutajanimi edukalt muudetud!")
-                break
-            else:
-                print("Selline kasutajanimi on juba olemas, vali mõni teine!")
+        nimi = input("Sisesta kasutajanimi: ")              
+        if nimi in kasutajad:            
+            while True:
+                parool = input("Sisesta salasõna: ")
+                p += 1
+                try:
+                    if kasutajad.index(nimi) == paroolid.index(parool):
+                        print(f"Tere tulemast! {nimi}")
+                        return
+                except ValueError:
+                    print("Vale nimi või salasõna!")
+                    if p == 5: 
+                        print("Proovi uuesti 10 sekundi pärast")
+                        for i in range(10):
+                            sleep(1)
+                            print(f"On jäänud {10 - i} sekundit")
         else:
-            print("Sellist kasutajat ei leitud, proovi uuesti!")
-    return kasutajad
+            print("Kasutajat pole")
 
-def unustatud_parooli_taastamine(paroolid: list, kasutajad: list) -> None:
-    """Funktsioon võimaldab kasutajal unustatud parooli taastada
-    :param list paroolid: parooli järjendid
-    :param list kasutajad: kasutaja järjendid
+def muuda_kasutaja_info(järjend: list) -> list:
     """
-    while True:
-        nimi = input("Mis on sinu kasutajanimi? ")
-        if nimi in kasutajad:
-            print("Sinu parool on:", paroolid[kasutajad.index(nimi)])
-            break
-        else:
-            print("Sellist kasutajat ei leitud, proovi uuesti!")
-
-def generate_password():
-    """Funktsioon genereerib juhusliku tugeva parooli
-    :rtype: str
+    Muudab kasutaja nime või parooli.
     """
-    password = ''
-    for _ in range(12):
-        password += str(random.randint(0, 9))
-    return password
+    muutuja = input("Vana nimi või parool: ")
+    if muutuja in järjend:
+        indeks = järjend.index(muutuja)
+        uus_muutuja = input("Uus nimi või parool: ")
+        järjend[indeks] = uus_muutuja
+    return järjend
 
 def loe_failist(fail: str) -> list:
+    """
+    Loeb teksti failist.
+    """
     järjend = []
+    try:
+        with open(fail, 'r', encoding="utf-8") as f:
+            järjend = f.readlines()
+    except FileNotFoundError:
+        print(f"Faili {fail} ei leitud.")
+    return [x.strip() for x in järjend]
 
-    with open(fail, 'r', encoding="utf-8") as f:
+def kirjuta_failisse(fail: str):
+    """
+    Salvestab teksti failisse.
+    """
+    n = int(input("Mitu sõna soovid lisada: "))
+    sõnad = [input(f"{i+1}. sõna: ") for i in range(n)]
+    with open(fail, 'w', encoding="utf-8") as f:
+        f.write("\n".join(sõnad))
 
+def ümber_kirjuta_fail(fail: str):
+    """
+    Ümberkirjutab teksti failisse.
+    """
+    tekst = input("Sisesta tekst: ")
+    with open(fail, 'w', encoding="utf-8") as f:
+        f.write(tekst)
 
-        for rida in f:
-            järjend.append(rida.strip())
+def faili_kustutamine():
+    """
+    Kustutab faili.
+    """
+    failinimi = input("Mis faili soovid kustutada? ")
+    if path.isfile(failinimi):
+        remove(failinimi)
+        print(f"Fail {failinimi} on kustutatud.")
+    else:
+        print(f"Faili {failinimi} ei leitud.")
 
-    return järjend
+def main():
+    """
+    Main funktsioon.
+    """
+    salasõnad = loe_failist("Salasõnad.txt")
+    kasutajanimed = loe_failist("Kasutajad.txt")
+
+    while True:
+        print(kasutajanimed)
+        print(salasõnad)
+        print("1 - Registreerimine\n2 - Autoriseerimine\n3 - Nime või parooli muutmine\n"
+              "4 - Unustasid parooli taastamine\n5 - Lõpetamine\n")
+        vastus = input("Sisestage arv: ")
+
+        if vastus == "1":
+            print("Registreerimine")
+            kasutajanimed, salasõnad = registreerimine(kasutajanimed, salasõnad)
+        elif vastus == "2":
+            print("Autoriseerimine")
+            autoriseerimine(kasutajanimed, salasõnad)
+        elif vastus == "3":
+            print("Nime või parooli muutmine")
+            vastus = input("Kas muudame nime, parooli või mõlemad: ")
+            if vastus == "nimi":
+                kasutajanimed = muuda_kasutaja_info(kasutajanimed)
+            elif vastus == "parool":
+                salasõnad = muuda_kasutaja_info(salasõnad)
+            elif vastus == "mõlemad":
+                print("Nime muutmine: ")
+                kasutajanimed = muuda_kasutaja_info(kasutajanimed)
+                print("Parooli muutmine: ")
+                salasõnad = muuda_kasutaja_info(salasõnad)
+        elif vastus == "4":
+            print("Unustasid parooli taastamine")
+        elif vastus == "5":
+            print("Lõpetamine")
+            break
+        else:
+            print("Tundmatu valik")
+
+if __name__ == "__main__":
+    main()
